@@ -91,13 +91,8 @@ if ! make -j"$(nproc)" O=out Image 2>&1 | tee build.log; then
 fi
 
 # ---- Post-build checks -------------------------------------------------------
-if [[ "$KSU_TYPE" == *"KPM"* ]] || [[ "$KSU_TYPE" == *"ReSukiSU"* ]]; then
-  require_config_enabled out/.config CONFIG_KPM || true
-  require_config_enabled out/.config CONFIG_KALLSYMS || true
-  require_config_enabled out/.config CONFIG_KALLSYMS_ALL || true
-  echo "==== RESUKISU KPM CONFIG SNAPSHOT ===="
-  grep -E '^CONFIG_KPM=|^CONFIG_KALLSYMS=|^CONFIG_KALLSYMS_ALL=' out/.config || true
-fi
+echo "==== RESUKISU KPM CONFIG SNAPSHOT ===="
+grep -E '^CONFIG_KPM=|^CONFIG_KALLSYMS=|^CONFIG_KALLSYMS_ALL=' out/.config || true
 
 ccache -sv || true
 test -f out/arch/arm64/boot/Image
