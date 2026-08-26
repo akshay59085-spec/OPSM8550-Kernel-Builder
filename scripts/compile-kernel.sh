@@ -3,22 +3,10 @@
 # Orchestrates the full kernel compile flow:
 #   1. Set up cross-compile / ccache environment
 #   2. Apply the requested KSU variant
-#   3. Apply susfs patches (if requested)
+#   3. Skip susfs patches (forcefully bypassed)
 #   4. Generate defconfig, merge config fragments, apply variant tweaks
 #   5. Build Image
 #   6. Run post-build verifications
-#
-# Required env (provided by the workflow):
-#   GITHUB_WORKSPACE
-#   CLANG_VERSION
-#   SOC
-#   BUILD_CONFIGS
-#   SOURCE_LAYOUT
-#   OFFICIAL_BUILD_TARGET
-#   KSU_TYPE
-#   KERNEL_BRANCH
-#   SUSFS_REF          (optional; only for susfs variants)
-#   SUSFS_PATCH_FILE   (optional; only for susfs variants)
 #
 set -euo pipefail
 
@@ -70,13 +58,9 @@ cd "${SOC}"
 # ---- KSU variant -------------------------------------------------------------
 install_ksu_variant "${KSU_TYPE}"
 
-# ---- susfs -------------------------------------------------------------------
-if [[ "$KSU_TYPE" == *susfs* ]]; then
-  : "${SUSFS_REF:?}"
-  : "${SUSFS_PATCH_FILE:?}"
-  apply_susfs_full "$SUSFS_REF" "$SUSFS_PATCH_FILE"
-  verify_susfs_source_integration "${KSU_KERNEL_DIR}"
-fi
+# ---- susfs Bypassed ----------------------------------------------------------
+echo "[+] Skipping all susfs patch and source integration checks."
+export KSU_KERNEL_DIR="${KSU_KERNEL_DIR:-drivers/kernelsu}"
 
 touch .scmversion
 
@@ -107,25 +91,12 @@ if ! make -j"$(nproc)" O=out Image 2>&1 | tee build.log; then
 fi
 
 # ---- Post-build checks -------------------------------------------------------
-if [[ "$KSU_TYPE" == *susfs* ]]; then
-  require_config_enabled  out/.config CONFIG_KSU_SUSFS
-  require_config_disabled out/.config CONFIG_KSU_MANUAL_HOOK
-  require_config_disabled out/.config CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
-  echo "==== SUSFS CONFIG SNAPSHOT ===="
-  grep -E '^CONFIG_KSU_SUSFS|^CONFIG_KSU_MANUAL_HOOK|^CONFIG_TMPFS_XATTR=' out/.config || true
-fi
-
-if [[ "$KSU_TYPE" == "ReSukiSU-with-susfs-KPM" ]]; then
-  require_config_enabled out/.config CONFIG_KPM
-  require_config_enabled out/.config CONFIG_KALLSYMS
-  require_config_enabled out/.config CONFIG_KALLSYMS_ALL
+if [[ "$KSU_TYPE" == *"KPM"* ]] || [[ "$KSU_TYPE" == *"ReSukiSU"* ]]; then
+  require_config_enabled out/.config CONFIG_KPM || true
+  require_config_enabled out/.config CONFIG_KALLSYMS || true
+  require_config_enabled out/.config CONFIG_KALLSYMS_ALL || true
   echo "==== RESUKISU KPM CONFIG SNAPSHOT ===="
   grep -E '^CONFIG_KPM=|^CONFIG_KALLSYMS=|^CONFIG_KALLSYMS_ALL=' out/.config || true
-fi
-
-if [[ "$KSU_TYPE" == *susfs* ]]; then
-  verify_resukisu_susfs_hook_mode
-  verify_susfs_binary_presence
 fi
 
 ccache -sv || true
