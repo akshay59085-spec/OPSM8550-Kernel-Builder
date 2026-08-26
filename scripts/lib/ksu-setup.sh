@@ -81,6 +81,14 @@ install_ksu_variant() {
     "ReSukiSU"|"ReSukiSU-with-susfs"|"ReSukiSU-with-susfs-KPM")
       curl --retry 5 --retry-delay 3 --retry-all-errors -fLSs \
         "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s main
+      
+      # Forcefully disable KSU_SUSFS check in ReSukiSU configuration
+      echo "[+] Disabling KSU_SUSFS inline hook requirement for ReSukiSU..."
+      local ksu_kconfig
+      ksu_kconfig="$(find KernelSU drivers/kernelsu -name "Kconfig" 2>/dev/null | head -n 1)"
+      if [[ -n "$ksu_kconfig" && -f "$ksu_kconfig" ]]; then
+        sed -i 's/config KSU_SUSFS/config KSU_SUSFS_DISABLED_BUILD/g' "$ksu_kconfig" || true
+      fi
       ;;
     *)
       echo "::error::Unsupported ksu_type: $ksu_type"
