@@ -82,12 +82,15 @@ install_ksu_variant() {
       curl --retry 5 --retry-delay 3 --retry-all-errors -fLSs \
         "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s main
       
-      # Forcefully disable KSU_SUSFS check in ReSukiSU configuration
-      echo "[+] Disabling KSU_SUSFS inline hook requirement for ReSukiSU..."
-      local ksu_kconfig
-      ksu_kconfig="$(find KernelSU drivers/kernelsu -name "Kconfig" 2>/dev/null | head -n 1)"
-      if [[ -n "$ksu_kconfig" && -f "$ksu_kconfig" ]]; then
-        sed -i 's/config KSU_SUSFS/config KSU_SUSFS_DISABLED_BUILD/g' "$ksu_kconfig" || true
+      echo "[+] Bypassing KSU_SUSFS inline hook checks for ReSukiSU..."
+      find . -type f -name "Kconfig" -exec sed -i 's/config KSU_SUSFS/config KSU_SUSFS_DISABLED/g' {} + || true
+      find . -type f -name "Makefile" -exec sed -i 's/CONFIG_KSU_SUSFS/CONFIG_KSU_SUSFS_DISABLED/g' {} + || true
+      
+      # Force enable KPM flags in defconfig
+      if [ -f "arch/arm64/configs/gki_defconfig" ]; then
+        echo "CONFIG_KPM=y" >> arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KALLSYMS=y" >> arch/arm64/configs/gki_defconfig
+        echo "CONFIG_KALLSYMS_ALL=y" >> arch/arm64/configs/gki_defconfig
       fi
       ;;
     *)
