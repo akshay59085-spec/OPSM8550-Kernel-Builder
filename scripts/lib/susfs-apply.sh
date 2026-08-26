@@ -207,7 +207,7 @@ apply_susfs_full() {
     exit 1
   }
 
-  if ! patch -p1 < "${susfs_patch_file}"; then
+  if ! patch -p1 --fuzz=3 --ignore-whitespace
     echo "[!] susfs patch reported conflicts, checking for known task_mmu.c drift..."
 
     local reject_files reject_count
