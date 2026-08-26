@@ -207,8 +207,12 @@ apply_susfs_full() {
     exit 1
   }
 
-  if ! patch -p1 --fuzz=5 --ignore-whitespace < "${susfs_patch_file}"; then
-    echo "[!] susfs patch reported conflicts, handling drift..."
+    if ! patch -p1 --ignore-whitespace < "${susfs_patch_file}"; then
+    echo "[!] susfs patch conflicts detected, applying mmu fix..."
+    apply_susfs_task_mmu_fix || true
+    find . -name "*.rej" -delete
+  fi
+  
 
     apply_susfs_task_mmu_fix || true
 
