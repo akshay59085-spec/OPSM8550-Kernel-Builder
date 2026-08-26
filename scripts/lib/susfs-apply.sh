@@ -4,12 +4,14 @@
 # executed. Depends on lib/kernel-helpers.sh.
 #
 
-apply_susfs_task_mmu_fix() {
-  local file="fs/proc/task_mmu.c"
+apply_susfs_full() {
+  echo "[+] Skipping susfs patching completely..."
+  return 0
 
-  if grep -q 'susfs_def.h' "$file"; then
-    echo "[+] task_mmu.c already includes susfs_def.h."
-    return 0
+  local susfs_ref="$1"
+  local susfs_patch_file="$2"
+}
+
   fi
 
   if grep -q '^#include <linux/pkeys.h>$' "$file"; then
