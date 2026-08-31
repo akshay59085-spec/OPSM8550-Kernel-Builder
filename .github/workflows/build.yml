@@ -56,6 +56,16 @@ on:
           - oneplus/sm8550_b_16.0.0_oneplus_11
           - oneplus/sm8550_b_16.0.0_oneplus_12r
           - oneplus/sm8650_b_16.0.0_oneplus12
+      custom_kernel_module_repo:
+        description: Custom Kernel Module Repo (e.g. gaurav-paul9/android_kernel_oneplus_sm8550-modules)
+        required: false
+        type: string
+        default: ""
+      custom_kernel_module_branch:
+        description: Custom Kernel Module Branch (e.g. lunaris)
+        required: false
+        type: string
+        default: ""
       clang_choice:
         description: Compiler preset; auto is safest for normal builds
         required: true
@@ -153,6 +163,8 @@ jobs:
 
     env:
       DEBIAN_FRONTEND: noninteractive
+      CUSTOM_KERNEL_MODULE_REPO: ${{ inputs.custom_kernel_module_repo }}
+      CUSTOM_KERNEL_MODULE_BRANCH: ${{ inputs.custom_kernel_module_branch }}
 
     steps:
       - name: Checkout pipeline
@@ -422,3 +434,4 @@ jobs:
           set -euo pipefail
           gh api "repos/${GH_REPO}/git/refs/tags/${RELEASE_TAG}" --method DELETE
           echo "[release] Removed unused tag ${RELEASE_TAG}."
+          
