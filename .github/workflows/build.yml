@@ -9,9 +9,8 @@ on:
         description: Device and upstream source preset
         required: true
         type: choice
-        default: SM8550 | OnePlus 11 | LunarisOS
+        default: SM8550 | OnePlus 11 / 12R | LineageOS (recommended)
         options:
-          - SM8550 | OnePlus 11 | LunarisOS
           - SM8550 | OnePlus 11 / 12R | LineageOS (recommended)
           - SM8550 | OnePlus 11 / 12R | crDroid
           - SM8550 | OnePlus 12R | development
@@ -96,6 +95,16 @@ on:
           - Patch/config validation only
           - Full build (artifact only)
           - Full build and publish release
+      custom_modules_repo:
+        description: Custom Kernel Modules Repo URL (optional, e.g. Gaurav's repo)
+        required: false
+        type: string
+        default: ""
+      custom_modules_branch:
+        description: Custom Kernel Modules Branch (optional, e.g. lunaris)
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -170,6 +179,8 @@ jobs:
           INPUT_CLANG_CHOICE: ${{ inputs.clang_choice }}
           INPUT_ROOT_SOLUTION: ${{ inputs.root_solution }}
           INPUT_BUILD_MODE: ${{ inputs.build_mode }}
+          INPUT_CUSTOM_MODULES_REPO: ${{ inputs.custom_modules_repo }}
+          INPUT_CUSTOM_MODULES_BRANCH: ${{ inputs.custom_modules_branch }}
         run: bash scripts/resolve-profile.sh
 
       - name: Set build metadata
