@@ -9,8 +9,9 @@ on:
         description: Device and upstream source preset
         required: true
         type: choice
-        default: SM8550 | OnePlus 11 / 12R | LineageOS (recommended)
+        default: SM8550 | OnePlus 11 | LunarisOS
         options:
+          - SM8550 | OnePlus 11 | LunarisOS
           - SM8550 | OnePlus 11 / 12R | LineageOS (recommended)
           - SM8550 | OnePlus 11 / 12R | crDroid
           - SM8550 | OnePlus 12R | development
