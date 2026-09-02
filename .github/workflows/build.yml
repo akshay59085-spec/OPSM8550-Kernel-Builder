@@ -9,16 +9,16 @@ on:
         description: Device and upstream source preset
         required: true
         type: choice
-        default: SM8550 | OnePlus 11 / 12R | LineageOS (recommended)
+        default: SM8550 | OnePlus 11 | LunarisOS
         options:
-          - SM7550 | OnePlus Nord CE4 | development
-          - SM8450 | OnePlus 10 Pro | OnePlus official
-          - SM8450 | OnePlus 10T / Ace Pro | LineageOS community
-          - SM8550 | OnePlus 11 | OnePlus official
           - SM8550 | OnePlus 11 | LunarisOS
           - SM8550 | OnePlus 11 / 12R | LineageOS (recommended)
           - SM8550 | OnePlus 11 / 12R | crDroid
           - SM8550 | OnePlus 12R | development
+          - SM7550 | OnePlus Nord CE4 | development
+          - SM8450 | OnePlus 10 Pro | OnePlus official
+          - SM8450 | OnePlus 10T / Ace Pro | LineageOS community
+          - SM8550 | OnePlus 11 | OnePlus official
           - SM8650 | OnePlus 12 | OnePlus official
           - SM8650 | OnePlus 12 | LineageOS (recommended)
           - SM8650 | OnePlus 12 | crDroid
@@ -171,13 +171,6 @@ jobs:
           INPUT_ROOT_SOLUTION: ${{ inputs.root_solution }}
           INPUT_BUILD_MODE: ${{ inputs.build_mode }}
         run: bash scripts/resolve-profile.sh
-
-      - name: Set OnePlus 12R Lunaris modules source
-        if: inputs.build_profile == 'SM8550 | OnePlus 12R | development'
-        run: |
-          set -euo pipefail
-          echo "MODULES_REPO=https://github.com/gaurav-paul9/android_kernel_oneplus_sm8550-modules.git" >> "$GITHUB_ENV"
-          echo "MODULES_BRANCH=lunaris" >> "$GITHUB_ENV"
 
       - name: Set build metadata
         id: metadata
