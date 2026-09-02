@@ -41,12 +41,16 @@ else
   DEFAULT_KERNEL_REPO="https://github.com/${KERNEL_SOURCE}/android_kernel_oneplus_${UPSTREAM_SOC}.git"
   DEFAULT_MODULES_REPO="https://github.com/${KERNEL_SOURCE}/android_kernel_oneplus_${UPSTREAM_SOC}-modules.git"
   KERNEL_CLONE_DIR="${SOC}"
-  # Vendor kernel symlinks point to the upstream repository stem, which can
-  # intentionally differ from the marketed SoC (Nord CE4: sm7550 -> sm8550).
   MODULES_CLONE_DIR="${UPSTREAM_SOC}-modules"
 fi
+
 KERNEL_REPO="${KERNEL_REPO_OVERRIDE:-$DEFAULT_KERNEL_REPO}"
 MODULES_REPO="${MODULES_REPO_OVERRIDE:-$DEFAULT_MODULES_REPO}"
+
+# LunarisOS sathi Gauravcha custom modules repo ani branch override kara
+if [[ "$KERNEL_SOURCE" == "LunarisOS" ]]; then
+  MODULES_REPO="https://github.com/gaurav-paul9/android_kernel_oneplus_sm8550-modules.git"
+fi
 
 if [[ "$INPUT_BRANCH_MODE" == "Use the recommended branch automatically" ]]; then
   KERNEL_BRANCH="$(git_ls_remote_retry --symref "$KERNEL_REPO" HEAD \
@@ -67,7 +71,11 @@ else
   fi
 fi
 
-MODULES_BRANCH="${MODULES_BRANCH_OVERRIDE:-$KERNEL_BRANCH}"
+if [[ "$KERNEL_SOURCE" == "LunarisOS" ]]; then
+  MODULES_BRANCH="lunaris"
+else
+  MODULES_BRANCH="${MODULES_BRANCH_OVERRIDE:-$KERNEL_BRANCH}"
+fi
 
 resolve_clang_version "$INPUT_CLANG_CHOICE" "$KERNEL_BRANCH"
 infer_android_versions "$KERNEL_BRANCH"
@@ -89,8 +97,6 @@ case "$KSU_TYPE" in
     KSU_REF="dev"
     ;;
   KernelSU-Next-with-susfs)
-    # The official dev branch does not carry the KernelSU-side SUSFS hooks.
-    # This branch tracks it and provides the matching in-tree integration.
     KSU_REPO="https://github.com/pershoot/KernelSU-Next.git"
     KSU_REF="dev-susfs"
     ;;
@@ -168,32 +174,6 @@ if [[ ! "$ANYKERNEL_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
   echo "::error::Could not resolve AnyKernel3 HEAD to a commit."
   exit 1
 fi
-
-case "$KERNEL_SOURCE" in
-  OnePlusOSS)
-    [[ "$KERNEL_BRANCH" =~ ^oneplus[/_] ]] \
-      || echo "::warning::OnePlus official source usually uses oneplus/* branches; selected '$KERNEL_BRANCH'."
-    ;;
-  LineageOS|lineage-ovaltine-dev)
-    [[ "$KERNEL_BRANCH" =~ ^lineage- ]] \
-      || echo "::warning::Lineage-style source usually uses lineage-* branches; selected '$KERNEL_BRANCH'."
-    ;;
-  LunarisOS)
-    [[ "$KERNEL_BRANCH" =~ ^lineage- ]] \
-      || echo "::warning::LunarisOS OnePlus 11 source usually uses a lineage-* kernel branch; selected '$KERNEL_BRANCH'."
-    ;;
-  OnePlus12R-development)
-    [[ "$KERNEL_BRANCH" == lineage-* || "$KERNEL_BRANCH" == sixteen* ]] \
-      || echo "::warning::Unexpected OnePlus 12R development branch: '$KERNEL_BRANCH'."
-    ;;
-  OnePlus-Nord-CE4-development)
-    [[ "$KERNEL_BRANCH" == lineage-* || "$KERNEL_BRANCH" == sixteen* || "$KERNEL_BRANCH" == seventeen* ]] \
-      || echo "::warning::Unexpected OnePlus Nord CE4 development branch: '$KERNEL_BRANCH'."
-    ;;
-  crdroidandroid)
-    echo "Note: crDroid branch naming may differ from LineageOS."
-    ;;
-esac
 
 {
   echo "PROFILE_ID=$PROFILE_ID"
@@ -281,22 +261,4 @@ esac
   echo "- Clang: $CLANG_VERSION"
   echo "- Root solution: $KSU_TYPE"
   echo "- Mode: $INPUT_BUILD_MODE"
-  if [[ -n "$SUPPORTED_ANDROID_VERSIONS" ]]; then
-    echo "- Android package check: $SUPPORTED_ANDROID_VERSIONS"
-  else
-    echo "- Android package check: disabled (branch could not be inferred)"
-  fi
-  if [[ -n "$KSU_COMMIT" ]]; then
-    echo "- KernelSU commit: \`${KSU_COMMIT}\` ($KSU_REF)"
-  fi
-  if [[ -n "$SUSFS_REF" ]]; then
-    echo "- SUSFS: $SUSFS_REF (\`${SUSFS_COMMIT}\`, required >= v${SUSFS_MIN_VERSION})"
-  fi
-  if [[ -n "$NOMOUNT_REF" ]]; then
-    echo "- NoMount: $NOMOUNT_REF (\`${NOMOUNT_COMMIT}\`, experimental)"
-  fi
-  if [[ "$KSU_TYPE" == *KPM* ]]; then
-    echo "- KPM: enabled (experimental)"
-  fi
-  echo "- AnyKernel3 commit: \`${ANYKERNEL_COMMIT}\`"
 } >> "$GITHUB_STEP_SUMMARY"
